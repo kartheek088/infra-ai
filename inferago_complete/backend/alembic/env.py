@@ -23,6 +23,10 @@ config = context.config
 
 # Allow override via command line; falls back to .env.
 raw_url = os.environ.get("ALEMBIC_DATABASE_URL") or os.getenv("DATABASE_URL", "")
+if raw_url.startswith("postgres://"):
+    raw_url = raw_url.replace("postgres://", "postgresql+asyncpg://", 1)
+elif raw_url.startswith("postgresql://") and not raw_url.startswith("postgresql+asyncpg://"):
+    raw_url = raw_url.replace("postgresql://", "postgresql+asyncpg://", 1)
 config.set_main_option("sqlalchemy.url", raw_url)
 
 if config.config_file_name is not None:
