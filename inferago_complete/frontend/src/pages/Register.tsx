@@ -7,8 +7,11 @@ export default function Register() {
   const [fullName, setFullName] = useState("");
   const [email, setEmail]       = useState("");
   const [password, setPassword] = useState("");
-  const mutation                 = useRegister();
-  const errorMsg                 = (mutation.error as any)?.response?.data?.detail ?? "Registration failed";
+  const mutation = useRegister();
+  const errorMsg =
+    (mutation.error as any)?.response?.data?.detail ||
+    (mutation.error as any)?.message ||
+    "Registration failed. Please check your backend connection.";
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-950 px-4">
