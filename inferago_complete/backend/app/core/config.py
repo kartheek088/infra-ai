@@ -1,6 +1,6 @@
 import os
 from typing import List, Union
-from pydantic import field_validator
+from pydantic import field_validator, model_validator
 from pydantic_settings import BaseSettings
 from pathlib import Path
 
@@ -14,6 +14,23 @@ class Settings(BaseSettings):
     ALGORITHM: str = "HS256"
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 1440
     CORS_ORIGINS: Union[str, List[str]] = ["*"]
+    # Toggle SQL echo for debugging; defaults False so production stays clean
+    DB_ECHO: bool = False
+    # OpenRouter key for AI execution explanations (optional; feature degrades gracefully)
+    OPENROUTER_API_KEY: str = ""
+    OPENROUTER_MODEL: str = "anthropic/claude-3-haiku"
+
+    @model_validator(mode="after")
+    def validate_secret_key(self):
+        """Fail fast if SECRET_KEY is the default in a non-dev environment."""
+        if self.SECRET_KEY == "ari-super-secret-key-change-in-production":
+            env = os.getenv("ENVIRONMENT", "development").lower()
+            if env not in ("development", "dev", "test", "testing"):
+                raise ValueError(
+                    "SECRET_KEY is set to the default placeholder value. "
+                    "Set SECRET_KEY to a cryptographically random string in production."
+                )
+        return self
 
     @field_validator("DATABASE_URL", mode="before")
     @classmethod
@@ -41,5 +58,23 @@ class Settings(BaseSettings):
         extra = "ignore"
 
 
+# ── Singleton instance ───────────────────────────────────────────────────────
+import logging
+import os as _os
+
 settings = Settings()
+
+_log = logging.getLogger(__name__)
+if not settings.OPENROUTER_API_KEY:
+    _log.warning(
+        "OPENROUTER_API_KEY is not set — AI execution explanations will be "
+        "unavailable. Set it in your .env file to enable the feature."
+    )
+env = _os.getenv("ENVIRONMENT", "development").lower()
+if env not in ("development", "dev", "test", "testing"):
+    if settings.SECRET_KEY == "ari-super-secret-key-change-in-production":
+        _log.critical(
+            "SECRET_KEY uses the default placeholder in a production environment. "
+            "Set SECRET_KEY to a cryptographically random string."
+        )
 

@@ -19,6 +19,9 @@ class Run(Base):
     created_at       = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
     # Phase 1: raw event log from platform webhooks
     events_jsonb     = Column(JSONB, nullable=True, default=None)
+    # Phase 8: AI explanation (OpenRouter) — cached per-execution, generated at most once
+    ai_explanation   = Column(Text, nullable=True, default=None)
+    ai_explained_at  = Column(DateTime(timezone=True), nullable=True, default=None)
 
 
 class TokenUsage(Base):

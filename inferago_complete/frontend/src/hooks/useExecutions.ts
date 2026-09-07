@@ -6,6 +6,9 @@ import {
   getTokenTrend,
   getCostBreakdown,
   getInefficiencyScore,
+  getExecutionTimeline,
+  getExecutionAnomalies,
+  getAiExplanation,
 } from "../api/executions";
 
 export function useExecutions(
@@ -56,5 +59,36 @@ export function useInefficiencyScore(workflowId: string) {
     queryKey: ["inefficiency-score", workflowId],
     queryFn:  () => getInefficiencyScore(workflowId),
     enabled:  !!workflowId,
+  });
+}
+
+// ── Phase 4 & 9: timeline, anomalies, AI explanation ──────────────────────────
+
+export function useExecutionTimeline(executionId: string) {
+  return useQuery({
+    queryKey: ["execution-timeline", executionId],
+    queryFn:  () => getExecutionTimeline(executionId),
+    enabled:  !!executionId,
+  });
+}
+
+export function useExecutionAnomalies(executionId: string) {
+  return useQuery({
+    queryKey: ["execution-anomalies", executionId],
+    queryFn:  () => getExecutionAnomalies(executionId),
+    enabled:  !!executionId,
+  });
+}
+
+export function useAiExplanation(executionId: string) {
+  return useQuery({
+    queryKey: ["ai-explanation", executionId],
+    queryFn:  () => getAiExplanation(executionId),
+    enabled:  !!executionId,
+    // Re-fetch every 15s while pending so the page auto-updates
+    refetchInterval: (query) => {
+      const status = query.state.data?.status;
+      return status === "pending" ? 15_000 : false;
+    },
   });
 }

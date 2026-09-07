@@ -31,22 +31,46 @@ class PolicyEvaluator:
         self,
         finding: SecurityFinding | SecurityFindingCreate,
         workflow_id: uuid.UUID,
+        tenant_id: uuid.UUID | None = None,
     ) -> tuple[Optional[str], Optional[uuid.UUID], Optional[str]]:
         """
         Returns (governance_action, policy_id, policy_name) for the first
         matching policy, or (None, None, None) if no policy matches.
 
         Governance actions: ALLOW | ALERT | REQUIRE_REVIEW | BLOCK
-        """
-        user_id = finding.user_id if isinstance(finding, SecurityFinding) else None
 
-        # Fetch enabled policies ordered by priority desc
+        The owning user is read from the finding itself when it has been
+        persisted (SecurityFinding). For pre-persist SecurityFindingCreate
+        objects, callers MUST pass tenant_id so we can scope the policy
+        search — this keeps us from leaking cross-tenant rules.
+        """
+        # Persisted finding: scope by tenant + user (multi-tenant safe)
+        # Pre-persist finding: must have tenant_id provided
+        if isinstance(finding, SecurityFinding):
+            scope_user_id   = finding.user_id
+            scope_tenant_id = finding.tenant_id
+        else:
+            if tenant_id is None:
+                logger.warning(
+                    "PolicyEvaluator.evaluate called with SecurityFindingCreate "
+                    "and no tenant_id — skipping policy matching."
+                )
+                return None, None, None
+            scope_user_id   = None
+            scope_tenant_id = tenant_id
+
+        # Fetch enabled policies for this user/tenant, ordered by priority desc.
+        # If we have a user_id, scope to user; if not (pre-persist path), scope
+        # to tenant so we still enforce tenant isolation.
+        conds = [Policy.enabled == True]  # noqa: E712
+        if scope_user_id is not None:
+            conds.append(Policy.user_id == scope_user_id)
+        else:
+            conds.append(Policy.tenant_id == scope_tenant_id)
+
         q = (
             select(Policy)
-            .where(
-                Policy.user_id == finding.user_id,
-                Policy.enabled == True,  # noqa: E712
-            )
+            .where(*conds)
             .order_by(Policy.priority.desc())
         )
         result = await self.db.execute(q)

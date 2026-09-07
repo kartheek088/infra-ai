@@ -144,3 +144,76 @@ export async function getCostBreakdown(workflowId: string): Promise<CostBreakdow
 export async function getInefficiencyScore(workflowId: string): Promise<InefficiencyScoreData> {
   return api.get<InefficiencyScoreData>(`/api/analytics/inefficiency-score/${workflowId}`).then(res => res.data);
 }
+
+// ── Phase 4: timeline + anomalies ────────────────────────────────────────────
+
+export interface TimelineStep {
+  step: string;
+  kind: "node" | "event";
+  status: string;
+  duration_ms: number | null;
+  tokens: number | null;
+  cost_usd: number | null;
+  timestamp: string | null;
+  error_message?: string | null;
+  model?: string | null;
+  provider?: string | null;
+  node_type?: string | null;
+  severity?: string | null;
+  // Event-only fields
+  event_type?: string | null;
+  message?: string | null;
+}
+
+export interface ExecutionTimeline {
+  execution_id: string;
+  workflow_id: string;
+  status: string;
+  started_at: string | null;
+  finished_at: string | null;
+  duration_ms: number | null;
+  total_cost: number;
+  total_tokens: number;
+  step_count: number;
+  steps: TimelineStep[];
+}
+
+export interface ExecutionAnomaly {
+  kind: "latency_spike" | "token_spike" | "node_failure" | "idle_gap" | "cost_spike";
+  step: string;
+  severity: "low" | "medium" | "high" | "critical";
+  detail: string;
+  // Optional context for the UI
+  value?: number | null;
+  threshold?: number | null;
+  baseline?: number | null;
+  multiplier?: number | null;
+  idle_seconds?: number | null;
+}
+
+export interface AnomalyReport {
+  execution_id: string;
+  anomaly_count: number;
+  anomalies: ExecutionAnomaly[];
+}
+
+export interface AiExplanation {
+  execution_id: string;
+  status: "ready" | "pending" | "unavailable";
+  text: string | null;
+  explained_at: string | null;
+  cached: boolean;
+  reason?: string;
+}
+
+export async function getExecutionTimeline(executionId: string): Promise<ExecutionTimeline> {
+  return api.get<ExecutionTimeline>(`/api/executions/${executionId}/timeline`).then(res => res.data);
+}
+
+export async function getExecutionAnomalies(executionId: string): Promise<AnomalyReport> {
+  return api.get<AnomalyReport>(`/api/executions/${executionId}/anomalies`).then(res => res.data);
+}
+
+export async function getAiExplanation(executionId: string): Promise<AiExplanation> {
+  return api.get<AiExplanation>(`/api/executions/${executionId}/ai-explanation`).then(res => res.data);
+}

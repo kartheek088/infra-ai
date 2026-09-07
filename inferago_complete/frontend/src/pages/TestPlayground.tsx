@@ -128,7 +128,7 @@ export default function TestPlayground() {
   const [nodes, setNodes]                         = useState<NodeTemplate[]>(cloneNodes(TEMPLATES[0].nodes));
   const [apiKey, setApiKey]                       = useState(() => localStorage.getItem(API_KEY_LS) ?? "");
   const [sending, setSending]                       = useState(false);
-  const [result, setResult]                       = useState<{ ok: boolean; data?: object; error?: string } | null>(null);
+  const [result, setResult]                       = useState<{ ok: boolean; data?: { run_id?: string; [k: string]: unknown }; error?: string } | null>(null);
 
   const activeTemplate = TEMPLATES[activeTemplateIdx];
 

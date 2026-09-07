@@ -28,7 +28,7 @@ export interface AuditLog {
   created_at: string;
 }
 
-export const getFindings = (params?: { workflow_id?: string; severity?: string; limit?: number }): Promise<SecurityFinding[]> =>
+export const getFindings = (params?: { workflow_id?: string; run_id?: string; severity?: string; limit?: number }): Promise<SecurityFinding[]> =>
   api.get("/api/security-findings", { params }).then((r) => r.data);
 
 export const getFinding = (id: string): Promise<SecurityFinding> =>
