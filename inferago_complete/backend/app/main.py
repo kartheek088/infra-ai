@@ -7,7 +7,7 @@ from app.routers import (
     api_keys, rag, suggestions,
     analytics, alerts, dashboard,
     policies, security_findings, audit_logs,
-    tenants, applications,
+    tenants, applications, review,
 )
 from app.middleware.error_handler import global_exception_handler
 
@@ -86,6 +86,7 @@ app.include_router(security_findings.router)
 app.include_router(audit_logs.router)
 app.include_router(tenants.router)
 app.include_router(applications.router)
+app.include_router(review.router)
 
 
 @app.get("/health", tags=["System"])

@@ -22,6 +22,11 @@ class Run(Base):
     # Phase 8: AI explanation (OpenRouter) — cached per-execution, generated at most once
     ai_explanation   = Column(Text, nullable=True, default=None)
     ai_explained_at  = Column(DateTime(timezone=True), nullable=True, default=None)
+    # Phase 10: execution-level governance
+    governance_decision  = Column(String(16), nullable=True)   # ALLOW | ALERT | REQUIRE_REVIEW | BLOCK | ALLOWED | BLOCKED | ESCALATED
+    max_risk_score      = Column(Integer, nullable=True)      # 0-100, highest finding risk at time of governance
+    review_required      = Column(String(1), nullable=True, default="n")   # 'y' | 'n'
+    review_status       = Column(String(16), nullable=True)  # pending | in_review | approved | blocked | escalated | completed
 
 
 class TokenUsage(Base):

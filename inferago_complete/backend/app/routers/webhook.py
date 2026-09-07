@@ -227,6 +227,19 @@ async def run_security_analysis_background(
 
             await db.commit()
 
+            # Phase 10: aggregate findings into execution-level governance + create Review
+            try:
+                from app.services.governance_service import compute_and_persist_governance
+                await compute_and_persist_governance(
+                    db=db,
+                    run_id=run_uuid,
+                    tenant_id=tenant_uuid,
+                    user_id=user_uuid,
+                )
+                await db.commit()
+            except Exception:
+                await db.rollback()
+
         except Exception:
             await db.rollback()
 

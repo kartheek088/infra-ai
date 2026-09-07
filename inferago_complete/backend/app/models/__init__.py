@@ -11,6 +11,7 @@ from app.models.run              import Run, TokenUsage
 from app.models.rag              import RAGMetrics
 from app.models.security_finding import SecurityFinding
 from app.models.event            import Event
+from app.models.review           import Review
 
 __all__ = [
     "Tenant",
@@ -26,4 +27,5 @@ __all__ = [
     "RAGMetrics",
     "SecurityFinding",
     "Event",
+    "Review",
 ]

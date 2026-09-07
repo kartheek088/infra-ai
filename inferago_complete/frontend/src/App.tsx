@@ -12,6 +12,7 @@ import Policies from "./pages/Policies";
 import AuditLog from "./pages/AuditLog";
 import SettingsPage from "./pages/Settings";
 import TestPlayground from "./pages/TestPlayground";
+import ReviewQueue from "./pages/ReviewQueue";
 import Layout from "./components/Layout";
 
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
@@ -44,6 +45,7 @@ export default function App() {
           <Route path="security-findings"         element={<SecurityFindings />} />
           <Route path="policies"                  element={<Policies />} />
           <Route path="audit-log"                element={<AuditLog />} />
+          <Route path="review-queue"             element={<ReviewQueue />} />
           <Route path="settings"                 element={<SettingsPage />} />
           <Route path="api-keys"                 element={<ApiKeys />} />
           <Route path="test-playground"          element={<TestPlayground />} />
