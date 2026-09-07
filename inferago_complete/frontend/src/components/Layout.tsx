@@ -1,5 +1,5 @@
 import { Outlet, NavLink, useNavigate } from "react-router-dom";
-import { Activity, LayoutDashboard, GitBranch, Key, LogOut, ChevronRight, Shield, FileText, Settings } from "lucide-react";
+import { Activity, LayoutDashboard, GitBranch, Key, LogOut, ChevronRight, Shield, FileText, Settings, Zap } from "lucide-react";
 import { useAuthStore } from "../store/authStore";
 
 const navItems = [
@@ -9,6 +9,7 @@ const navItems = [
   { to: "/policies",         label: "Policies",          icon: FileText },
   { to: "/audit-log",       label: "Audit",            icon: FileText },
   { to: "/api-keys",         label: "API Keys",          icon: Key },
+  { to: "/test-playground",  label: "Test Playground",   icon: Zap },
   { to: "/settings",        label: "Settings",          icon: Settings },
 ];
 

@@ -11,6 +11,7 @@ import SecurityFindings from "./pages/SecurityFindings";
 import Policies from "./pages/Policies";
 import AuditLog from "./pages/AuditLog";
 import SettingsPage from "./pages/Settings";
+import TestPlayground from "./pages/TestPlayground";
 import Layout from "./components/Layout";
 
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
@@ -45,6 +46,7 @@ export default function App() {
           <Route path="audit-log"                element={<AuditLog />} />
           <Route path="settings"                 element={<SettingsPage />} />
           <Route path="api-keys"                 element={<ApiKeys />} />
+          <Route path="test-playground"          element={<TestPlayground />} />
         </Route>
       </Routes>
     </BrowserRouter>
