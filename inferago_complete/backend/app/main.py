@@ -7,6 +7,7 @@ from app.routers import (
     api_keys, rag, suggestions,
     analytics, alerts, dashboard,
     policies, security_findings, audit_logs,
+    tenants, applications,
 )
 from app.middleware.error_handler import global_exception_handler
 
@@ -32,23 +33,20 @@ async def lifespan(app: FastAPI):
 
 
 app = FastAPI(
-    title="Inferago API",
+    title="ARI — AI Runtime Intelligence",
     description="""
-Multi-platform AI workflow token monitoring and optimization.
+AI Runtime Security & Governance platform for multi-platform AI workflow monitoring.
 
 ## Features
-- **Real-time monitoring** — every run captured via webhook instantly
-- **Token tracking** — prompt + completion tokens per node per run
-- **Cost calculation** — per-model USD pricing, per-run and per-day
-- **Health scoring** — composite 0-100 score with grade A/B/C/D
-- **Anomaly detection** — cost spikes, token spikes, loop detection
-- **RAG analytics** — chunk efficiency, relevance scores, duplicate detection
-- **Suggestions engine** — 9 rules, ranked by impact with savings estimates
-- **Inefficiency scoring** — 0-100 score with specific flags
-- **Run filtering** — by status, platform, date, cost
-- **Node-level traces** — step-by-step execution breakdown with error hints
-- **Alerts** — cost threshold, token spike, error rate, inactivity, daily/monthly budget
-- **Multi-platform** — n8n, Make, Zapier, Custom
+- **Universal Event Telemetry** — structured events from n8n, Make, Zapier, Custom webhooks
+- **Security Detection** — PII exposure, prompt injection, data exfiltration, anomalous behavior
+- **Policy Engine** — rule-based governance with ALLOW / ALERT / REQUIRE_REVIEW / BLOCK actions
+- **AI LLM Call Tracking** — token usage, cost, latency, provider breakdown
+- **RAG Analytics** — chunk efficiency, relevance scores, duplicate detection
+- **Inefficiency Scoring** — 0-100 score with specific optimization flags
+- **Human-in-the-Loop Reviews** — REQUIRE_REVIEW action surfaces executions for approval
+- **Audit Logging** — immutable record of all policy evaluations and governance actions
+- **Multi-tenancy** — tenants, applications, and environment-scoped isolation
 
 ## Platforms
 Connect via webhook URL: `/api/webhook/{platform}?api_key=YOUR_KEY`
@@ -86,21 +84,22 @@ app.include_router(dashboard.router)
 app.include_router(policies.router)
 app.include_router(security_findings.router)
 app.include_router(audit_logs.router)
+app.include_router(tenants.router)
+app.include_router(applications.router)
 
 
 @app.get("/health", tags=["System"])
 def health_check():
     return {
         "status":    "ok",
-        "service":   "inferago",
+        "service":   "ari",
         "version":   "0.5.0",
         "platforms": ["n8n", "make", "zapier", "custom"],
         "features":  [
-            "token_tracking", "cost_calculation", "health_score",
-            "anomaly_detection", "loop_detection", "rag_analytics",
-            "suggestions", "inefficiency_score", "run_filtering",
-            "node_traces", "alerts", "multi_platform",
-            "security_detection", "risk_scoring", "policy_engine",
-            "governance_actions", "human_review", "audit_logs",
+            "multi_tenancy", "universal_telemetry", "security_detection",
+            "policy_engine", "llm_tracking", "rag_analytics",
+            "inefficiency_score", "run_filtering", "node_traces",
+            "alerts", "human_review", "audit_logs",
+            "ai_summaries", "execution_tracking",
         ],
     }

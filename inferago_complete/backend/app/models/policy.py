@@ -13,6 +13,7 @@ class Policy(Base):
     __tablename__ = "policies"
 
     id                = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    tenant_id         = Column(UUID(as_uuid=True), ForeignKey("tenants.id"), nullable=False, index=True)
     user_id           = Column(UUID(as_uuid=True), ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True)
 
     # Identity

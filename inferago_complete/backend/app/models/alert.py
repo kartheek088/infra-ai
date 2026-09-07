@@ -18,6 +18,7 @@ class Alert(Base):
     __tablename__ = "alerts"
 
     id                = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    tenant_id         = Column(UUID(as_uuid=True), ForeignKey("tenants.id"), nullable=False, index=True)
     workflow_id       = Column(UUID(as_uuid=True), ForeignKey("workflows.id", ondelete="CASCADE"), nullable=False, index=True)
     user_id           = Column(UUID(as_uuid=True), ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
     alert_type        = Column(String, nullable=False)  # see docstring above

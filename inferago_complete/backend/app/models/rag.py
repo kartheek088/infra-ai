@@ -6,6 +6,7 @@ from app.db.base import Base
 class RAGMetrics(Base):
     __tablename__ = "rag_metrics"
     id                  = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    tenant_id           = Column(UUID(as_uuid=True), ForeignKey("tenants.id"), nullable=False, index=True)
     run_id              = Column(UUID(as_uuid=True), ForeignKey("runs.id", ondelete="CASCADE"), nullable=False, index=True)
     workflow_id         = Column(UUID(as_uuid=True), ForeignKey("workflows.id", ondelete="CASCADE"), nullable=False, index=True)
     chunks_retrieved    = Column(Integer, default=0)

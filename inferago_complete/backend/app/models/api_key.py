@@ -6,6 +6,7 @@ from app.db.base import Base
 class ApiKey(Base):
     __tablename__ = "api_keys"
     id           = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    tenant_id    = Column(UUID(as_uuid=True), ForeignKey("tenants.id"), nullable=False, index=True)
     user_id      = Column(UUID(as_uuid=True), ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True)
     key          = Column(String, unique=True, index=True, nullable=False)
     name         = Column(String, nullable=False)

@@ -7,6 +7,7 @@ from app.db.base import Base
 class Run(Base):
     __tablename__ = "runs"
     id               = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    tenant_id        = Column(UUID(as_uuid=True), ForeignKey("tenants.id"), nullable=False, index=True)
     workflow_id      = Column(UUID(as_uuid=True), ForeignKey("workflows.id", ondelete="CASCADE"), nullable=False, index=True)
     n8n_execution_id = Column(String, index=True, nullable=True)
     status           = Column(String, nullable=False, default="unknown")
@@ -23,6 +24,7 @@ class Run(Base):
 class TokenUsage(Base):
     __tablename__ = "token_usage"
     id                = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    tenant_id         = Column(UUID(as_uuid=True), ForeignKey("tenants.id"), nullable=False, index=True)
     run_id            = Column(UUID(as_uuid=True), ForeignKey("runs.id", ondelete="CASCADE"), nullable=False, index=True)
     node_name         = Column(String, nullable=False)
     model             = Column(String, nullable=True)

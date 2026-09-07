@@ -40,9 +40,6 @@ class AuditLogSchema(BaseModel):
     model_config = {"from_attributes": True}
 
 
-router = APIRouter(prefix="/api/audit-logs", tags=["audit-logs"])
-
-
 @router.get("", response_model=list[AuditLogSchema])
 async def list_audit_logs(
     entity_type: Optional[str] = Query(None),
