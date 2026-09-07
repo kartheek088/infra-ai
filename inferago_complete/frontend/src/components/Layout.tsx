@@ -26,8 +26,8 @@ export default function Layout() {
             <Activity className="w-5 h-5 text-white" />
           </div>
           <div>
-            <span className="text-lg font-bold text-white tracking-tight">Inferago</span>
-            <p className="text-xs text-gray-500">AI Runtime Security</p>
+            <span className="text-lg font-bold text-white tracking-tight">ARI</span>
+            <p className="text-xs text-gray-500">AI Runtime Intelligence</p>
           </div>
         </div>
 

@@ -19,13 +19,13 @@ export default function Register() {
         <div className="flex items-center justify-center gap-3 mb-8">
           <div className="bg-blue-600 p-2 rounded-lg"><Activity className="w-6 h-6 text-white" /></div>
           <div>
-            <span className="text-2xl font-bold text-white">Inferago</span>
-            <p className="text-xs text-gray-500">AI Workflow Monitor</p>
+            <span className="text-2xl font-bold text-white">ARI</span>
+            <p className="text-xs text-gray-500">AI Runtime Intelligence</p>
           </div>
         </div>
         <div className="card">
           <h1 className="text-xl font-bold text-white mb-1">Create account</h1>
-          <p className="text-gray-400 text-sm mb-6">Start monitoring your AI workflows</p>
+          <p className="text-gray-400 text-sm mb-6">Secure and govern your AI workflows</p>
           <form onSubmit={(e) => { e.preventDefault(); mutation.mutate({ full_name: fullName, email, password }); }} className="space-y-4">
             <div>
               <label className="block text-sm text-gray-400 mb-1">Full name</label>

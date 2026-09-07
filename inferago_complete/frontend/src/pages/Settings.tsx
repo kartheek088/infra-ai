@@ -44,7 +44,7 @@ export default function SettingsPage() {
           ))}
         </div>
         <p className="text-xs text-gray-600 mt-4">
-          Use the <strong>X-API-Key</strong> header with your Inferago API key to authenticate webhook requests.
+          Use the <strong>X-API-Key</strong> header with your ARI API key to authenticate webhook requests.
         </p>
       </div>
 

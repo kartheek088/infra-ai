@@ -34,7 +34,7 @@ export default function Dashboard() {
       <div>
         <h1 className="text-2xl font-bold text-white">Dashboard</h1>
         <p className="text-gray-400 text-sm mt-1">
-          Overview of your AI workflow monitoring
+          AI Runtime Intelligence: security, governance & observability
         </p>
       </div>
 

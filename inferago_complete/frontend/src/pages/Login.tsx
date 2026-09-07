@@ -19,8 +19,8 @@ export default function Login() {
         <div className="flex items-center justify-center gap-3 mb-8">
           <div className="bg-blue-600 p-2 rounded-lg"><Activity className="w-6 h-6 text-white" /></div>
           <div>
-            <span className="text-2xl font-bold text-white">Inferago</span>
-            <p className="text-xs text-gray-500">AI Workflow Monitor</p>
+            <span className="text-2xl font-bold text-white">ARI</span>
+            <p className="text-xs text-gray-500">AI Runtime Intelligence</p>
           </div>
         </div>
         <div className="card">
