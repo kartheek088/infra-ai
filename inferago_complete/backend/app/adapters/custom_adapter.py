@@ -1,5 +1,5 @@
 from datetime import datetime
-from app.adapters.base_adapter import StandardExecution, NodeExecution
+from app.adapters.base_adapter import StandardExecution, NodeExecution, ExecutionEvent
 from app.services.token_parser import calculate_cost
 
 
@@ -23,6 +23,12 @@ class CustomAdapter:
             prompt     = node.get("prompt_tokens", 0)
             completion = node.get("completion_tokens", 0)
             model      = node.get("model", "unknown")
+            output = node.get("output") or node.get("response") or ""
+            if output:
+                metadata = {"output": output}
+            else:
+                metadata = {}
+
             nodes.append(NodeExecution(
                 node_name=node.get("node_name", "Unknown Node"),
                 node_type=node.get("node_type", "llm"),
@@ -31,6 +37,7 @@ class CustomAdapter:
                 completion_tokens=completion,
                 total_tokens=node.get("total_tokens", prompt + completion),
                 cost_usd=node.get("cost_usd") or calculate_cost(model, prompt, completion),
+                metadata=metadata if metadata else None,
             ))
 
         started_at  = parse_dt(payload.get("started_at"))
@@ -49,4 +56,5 @@ class CustomAdapter:
             finished_at=finished_at,
             duration_ms=duration_ms,
             nodes=nodes,
+            events=[],
         )

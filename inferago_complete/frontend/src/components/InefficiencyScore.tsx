@@ -1,4 +1,4 @@
-import { useInefficiencyScore } from "../hooks/useRuns";
+import { useInefficiencyScore } from "../hooks/useExecutions";
 import { Loader2, AlertTriangle, CheckCircle } from "lucide-react";
 
 export default function InefficiencyScore({ workflowId }: { workflowId: string }) {

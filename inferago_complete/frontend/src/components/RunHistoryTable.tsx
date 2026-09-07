@@ -1,19 +1,19 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { useRuns } from "../hooks/useRuns";
+import { useExecutions } from "../hooks/useExecutions";
 import { Loader2, ChevronRight, Filter } from "lucide-react";
 import PlatformBadge from "./PlatformBadge";
 
-const STATUS_OPTIONS = ["", "success", "failed", "running"];
+const STATUS_OPTIONS   = ["", "success", "failed", "running"];
 const PLATFORM_OPTIONS = ["", "n8n", "make", "zapier", "custom"];
 
 export default function RunHistoryTable({ workflowId }: { workflowId: string }) {
-  const navigate = useNavigate();
+  const navigate        = useNavigate();
   const [status, setStatus]     = useState("");
   const [platform, setPlatform] = useState("");
   const [showFilters, setShowFilters] = useState(false);
 
-  const { data: runs, isLoading } = useRuns(workflowId, {
+  const { data: executions, isLoading } = useExecutions(workflowId, {
     status:   status   || undefined,
     platform: platform || undefined,
     limit:    50,
@@ -30,7 +30,7 @@ export default function RunHistoryTable({ workflowId }: { workflowId: string }) 
     <div className="card">
       {/* Header */}
       <div className="flex items-center justify-between mb-4">
-        <h2 className="text-lg font-semibold text-white">Run History</h2>
+        <h2 className="text-lg font-semibold text-white">Execution History</h2>
         <button
           onClick={() => setShowFilters(!showFilters)}
           className={`flex items-center gap-1.5 text-sm px-3 py-1.5 rounded-lg transition-colors ${
@@ -85,9 +85,9 @@ export default function RunHistoryTable({ workflowId }: { workflowId: string }) 
         <div className="flex items-center justify-center py-10">
           <Loader2 className="w-5 h-5 text-blue-400 animate-spin" />
         </div>
-      ) : !runs?.length ? (
+      ) : !executions?.length ? (
         <div className="text-center py-10 text-gray-600 text-sm">
-          No runs found {status || platform ? "for this filter" : "yet"}
+          No executions found {status || platform ? "for this filter" : "yet"}
         </div>
       ) : (
         <div className="overflow-x-auto">
@@ -103,31 +103,31 @@ export default function RunHistoryTable({ workflowId }: { workflowId: string }) 
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-800/50">
-              {runs.map((run) => (
+              {executions.map((exec) => (
                 <tr
-                  key={run.id}
-                  onClick={() => navigate(`/runs/${run.id}`)}
+                  key={exec.id}
+                  onClick={() => navigate(`/executions/${exec.id}`)}
                   className="hover:bg-gray-800/40 cursor-pointer transition-colors group"
                 >
                   <td className="py-3 pr-4">
                     <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${
-                      statusColor[run.status] ?? statusColor.unknown
+                      statusColor[exec.status] ?? statusColor.unknown
                     }`}>
-                      {run.status}
+                      {exec.status}
                     </span>
                   </td>
                   <td className="py-3 pr-4">
-                    <PlatformBadge platform={run.platform} />
+                    <PlatformBadge platform={exec.platform} />
                   </td>
                   <td className="py-3 pr-4 text-gray-400">
-                    {run.triggered_by ?? "—"}
+                    {exec.triggered_by ?? "—"}
                   </td>
                   <td className="py-3 pr-4 text-right text-gray-400 tabular-nums">
-                    {run.duration_ms ? `${(run.duration_ms / 1000).toFixed(1)}s` : "—"}
+                    {exec.duration_ms ? `${(exec.duration_ms / 1000).toFixed(1)}s` : "—"}
                   </td>
                   <td className="py-3 text-gray-500 text-xs">
-                    {run.created_at
-                      ? new Date(run.created_at).toLocaleString()
+                    {exec.created_at
+                      ? new Date(exec.created_at).toLocaleString()
                       : "—"}
                   </td>
                   <td className="py-3 pl-2">

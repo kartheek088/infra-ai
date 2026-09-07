@@ -33,3 +33,7 @@ async def get_current_user(
         raise HTTPException(status_code=401, detail="User not found or inactive")
 
     return user
+
+
+# Alias for backward compatibility with newer routers
+current_active_user = get_current_user

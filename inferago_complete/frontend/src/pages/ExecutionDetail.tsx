@@ -1,12 +1,12 @@
 import { useParams, useNavigate } from "react-router-dom";
-import { ArrowLeft, Loader2, AlertCircle, CheckCircle, Clock, Zap } from "lucide-react";
-import { useRunTrace } from "../hooks/useRuns";
+import { ArrowLeft, Loader2, AlertCircle, Clock, Zap } from "lucide-react";
+import { useExecutionTrace } from "../hooks/useExecutions";
 import PlatformBadge from "../components/PlatformBadge";
 
-export default function RunDetail() {
-  const { runId }  = useParams<{ runId: string }>();
-  const navigate   = useNavigate();
-  const { data: trace, isLoading, isError } = useRunTrace(runId!);
+export default function ExecutionDetail() {
+  const { executionId } = useParams<{ executionId: string }>();
+  const navigate        = useNavigate();
+  const { data: trace, isLoading, isError } = useExecutionTrace(executionId!);
 
   if (isLoading) {
     return (
@@ -19,7 +19,7 @@ export default function RunDetail() {
   if (isError || !trace) {
     return (
       <div className="p-6 text-center">
-        <p className="text-red-400">Run not found</p>
+        <p className="text-red-400">Execution not found</p>
         <button onClick={() => navigate(-1)} className="btn-secondary mt-4 text-sm">
           Go back
         </button>
@@ -44,13 +44,13 @@ export default function RunDetail() {
         </button>
         <div>
           <div className="flex items-center gap-3">
-            <h1 className="text-2xl font-bold text-white">Run Trace</h1>
+            <h1 className="text-2xl font-bold text-white">Execution Trace</h1>
             <span className={`text-sm font-semibold ${statusColor}`}>
               {trace.status}
             </span>
             <PlatformBadge platform={trace.platform} />
           </div>
-          <p className="text-gray-500 text-xs mt-1 font-mono">{runId}</p>
+          <p className="text-gray-500 text-xs mt-1 font-mono">{executionId}</p>
         </div>
       </div>
 
@@ -100,7 +100,7 @@ export default function RunDetail() {
 
         {trace.node_trace.length === 0 ? (
           <div className="text-center py-8 text-gray-600 text-sm">
-            No AI node data recorded for this run
+            No AI node data recorded for this execution
           </div>
         ) : (
           <div className="space-y-3">
@@ -121,6 +121,11 @@ export default function RunDetail() {
                     <span className="text-xs text-gray-500 bg-gray-800 px-2 py-0.5 rounded font-mono flex-shrink-0">
                       {node.model}
                     </span>
+                    {node.provider && (
+                      <span className="text-xs text-gray-500 bg-gray-800 px-2 py-0.5 rounded flex-shrink-0">
+                        {node.provider}
+                      </span>
+                    )}
                   </div>
 
                   {/* Token bars */}
@@ -138,6 +143,15 @@ export default function RunDetail() {
                       <p className="text-white font-bold">{node.total_tokens.toLocaleString()}</p>
                     </div>
                   </div>
+
+                  {/* Extended metadata */}
+                  {(node.node_type || node.event_type || node.latency_ms) && (
+                    <div className="flex gap-4 mt-2 text-xs text-gray-500">
+                      {node.node_type && <span>type: <span className="text-gray-400">{node.node_type}</span></span>}
+                      {node.event_type && <span>event: <span className="text-gray-400">{node.event_type}</span></span>}
+                      {node.latency_ms && <span>latency: <span className="text-gray-400">{node.latency_ms}ms</span></span>}
+                    </div>
+                  )}
                 </div>
 
                 {/* Cost */}
@@ -161,6 +175,31 @@ export default function RunDetail() {
           </div>
         )}
       </div>
+
+      {/* Event timeline */}
+      {trace.events && trace.events.length > 0 && (
+        <div className="card">
+          <h2 className="text-sm font-semibold text-gray-400 mb-3">
+            Event Timeline
+            <span className="text-xs text-gray-600 ml-2">({trace.events.length} events)</span>
+          </h2>
+          <div className="space-y-2">
+            {trace.events.map((ev, i) => (
+              <div key={i} className="flex items-start gap-3 text-xs">
+                <div className="flex-shrink-0 w-2 h-2 mt-1.5 rounded-full bg-blue-500" />
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2">
+                    <span className="font-mono text-gray-500">{ev.event_type}</span>
+                    {ev.node_name && <span className="text-gray-400">{ev.node_name}</span>}
+                    <span className="text-gray-600 ml-auto">{ev.timestamp ? new Date(ev.timestamp).toLocaleTimeString() : ""}</span>
+                  </div>
+                  {ev.message && <p className="text-gray-500 mt-0.5">{ev.message}</p>}
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* Timestamps */}
       <div className="card">

@@ -1,11 +1,15 @@
 import { Outlet, NavLink, useNavigate } from "react-router-dom";
-import { Activity, LayoutDashboard, GitBranch, Key, LogOut, ChevronRight } from "lucide-react";
+import { Activity, LayoutDashboard, GitBranch, Key, LogOut, ChevronRight, Shield, FileText, Settings } from "lucide-react";
 import { useAuthStore } from "../store/authStore";
 
 const navItems = [
-  { to: "/dashboard", label: "Dashboard",  icon: LayoutDashboard },
-  { to: "/workflows", label: "Workflows",  icon: GitBranch },
-  { to: "/api-keys",  label: "API Keys",   icon: Key },
+  { to: "/dashboard",        label: "Dashboard",        icon: LayoutDashboard },
+  { to: "/workflows",       label: "Workflows",         icon: GitBranch },
+  { to: "/security-findings", label: "Security",          icon: Shield },
+  { to: "/policies",         label: "Policies",          icon: FileText },
+  { to: "/audit-log",       label: "Audit",            icon: FileText },
+  { to: "/api-keys",         label: "API Keys",          icon: Key },
+  { to: "/settings",        label: "Settings",          icon: Settings },
 ];
 
 export default function Layout() {
@@ -23,7 +27,7 @@ export default function Layout() {
           </div>
           <div>
             <span className="text-lg font-bold text-white tracking-tight">Inferago</span>
-            <p className="text-xs text-gray-500">AI Workflow Monitor</p>
+            <p className="text-xs text-gray-500">AI Runtime Security</p>
           </div>
         </div>
 

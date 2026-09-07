@@ -1,7 +1,8 @@
 import uuid
-from sqlalchemy import Column, String, Integer, Float, DateTime, ForeignKey, func
-from sqlalchemy.dialects.postgresql import UUID
+from sqlalchemy import Column, String, Integer, Float, DateTime, ForeignKey, Text, func
+from sqlalchemy.dialects.postgresql import UUID, JSONB
 from app.db.base import Base
+
 
 class Run(Base):
     __tablename__ = "runs"
@@ -15,6 +16,9 @@ class Run(Base):
     started_at       = Column(DateTime(timezone=True), nullable=True)
     finished_at      = Column(DateTime(timezone=True), nullable=True)
     created_at       = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
+    # Phase 1: raw event log from platform webhooks
+    events_jsonb     = Column(JSONB, nullable=True, default=None)
+
 
 class TokenUsage(Base):
     __tablename__ = "token_usage"
@@ -27,3 +31,10 @@ class TokenUsage(Base):
     total_tokens      = Column(Integer, default=0)
     cost_usd          = Column(Float, default=0.0)
     recorded_at       = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
+    # Phase 1: richer per-node execution metadata
+    node_type         = Column(String(64), nullable=True, default=None)   # llm | http_request | trigger | ...
+    event_type        = Column(String(64), nullable=True, default=None)   # node_started | node_finished | ...
+    provider          = Column(String(64), nullable=True, default=None)    # openai | anthropic | azure | ...
+    error_message     = Column(Text, nullable=True, default=None)
+    latency_ms        = Column(Integer, nullable=True, default=None)
+    node_metadata     = Column('metadata', JSONB, nullable=True, default=None)

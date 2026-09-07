@@ -9,13 +9,13 @@ from app.core.utils import to_uuid
 from app.models.user import User
 from app.models.workflow import Workflow
 from app.models.run import Run, TokenUsage
-from app.schemas.run import RunCreate, RunResponse, TokenUsageCreate, TokenUsageResponse, TokenSummaryResponse
+from app.schemas.execution import RunCreate, RunResponse, TokenUsageCreate, TokenUsageResponse, TokenSummaryResponse
 
-router = APIRouter(prefix="/api/runs", tags=["Runs & Tokens"])
+router = APIRouter(prefix="/api/executions", tags=["Executions & Tokens"])
 
 
 @router.post("/", response_model=RunResponse, status_code=201)
-async def create_run(
+async def create_execution(
     data: RunCreate,
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
@@ -28,7 +28,7 @@ async def create_run(
 
 
 @router.get("/{workflow_id}", response_model=list[RunResponse])
-async def get_runs(
+async def get_executions(
     workflow_id: str,
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
@@ -41,7 +41,7 @@ async def get_runs(
     limit: int = Query(default=50, ge=1, le=200),
 ):
     """
-    Get run history with filtering support.
+    Get execution history with filtering support.
     Filter by status, platform, date range, and minimum cost.
     """
     wf_uuid = to_uuid(workflow_id)
@@ -89,20 +89,20 @@ async def get_runs(
     return runs
 
 
-@router.get("/{run_id}/tokens", response_model=TokenSummaryResponse)
-async def get_run_tokens(
-    run_id: str,
+@router.get("/{execution_id}/tokens", response_model=TokenSummaryResponse)
+async def get_execution_tokens(
+    execution_id: str,
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ):
-    """Full token breakdown for a run — prompt vs completion per node."""
-    run_uuid = to_uuid(run_id)
+    """Full token breakdown for an execution — prompt vs completion per node."""
+    run_uuid = to_uuid(execution_id)
     result = await db.execute(
         select(TokenUsage).where(TokenUsage.run_id == run_uuid).order_by(TokenUsage.recorded_at)
     )
     tokens = result.scalars().all()
     return TokenSummaryResponse(
-        run_id=run_id,
+        run_id=execution_id,
         total_prompt_tokens=sum(t.prompt_tokens for t in tokens),
         total_completion_tokens=sum(t.completion_tokens for t in tokens),
         total_tokens=sum(t.total_tokens for t in tokens),
@@ -111,29 +111,28 @@ async def get_run_tokens(
     )
 
 
-@router.post("/{run_id}/tokens", response_model=TokenUsageResponse, status_code=201)
+@router.post("/{execution_id}/tokens", response_model=TokenUsageResponse, status_code=201)
 async def store_tokens(
-    run_id: str,
+    execution_id: str,
     data: TokenUsageCreate,
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ):
     """
-    Store token data for a specific run node.
-    Requires authentication and ownership of the workflow that this run belongs to.
+    Store token data for a specific execution node.
+    Requires authentication and ownership of the workflow that this execution belongs to.
     """
-    # Verify the run exists and belongs to the current user's workflow
-    run_uuid = to_uuid(run_id)
+    run_uuid = to_uuid(execution_id)
     run_result = await db.execute(select(Run).where(Run.id == run_uuid))
     run = run_result.scalar_one_or_none()
     if not run:
-        raise HTTPException(status_code=404, detail="Run not found")
+        raise HTTPException(status_code=404, detail="Execution not found")
 
     wf_result = await db.execute(
         select(Workflow).where(Workflow.id == run.workflow_id, Workflow.user_id == current_user.id)
     )
     if not wf_result.scalar_one_or_none():
-        raise HTTPException(status_code=403, detail="Not authorized for this run")
+        raise HTTPException(status_code=403, detail="Not authorized for this execution")
 
     token = TokenUsage(run_id=run_uuid, **data.model_dump())
     db.add(token)
@@ -142,14 +141,14 @@ async def store_tokens(
     return token
 
 
-@router.get("/{run_id}/nodes", response_model=list[TokenUsageResponse])
-async def get_run_nodes(
-    run_id: str,
+@router.get("/{execution_id}/nodes", response_model=list[TokenUsageResponse])
+async def get_execution_nodes(
+    execution_id: str,
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ):
     """Per-node token and cost breakdown, sorted by cost descending."""
-    run_uuid = to_uuid(run_id)
+    run_uuid = to_uuid(execution_id)
     result = await db.execute(
         select(TokenUsage)
         .where(TokenUsage.run_id == run_uuid)
@@ -158,21 +157,21 @@ async def get_run_nodes(
     return result.scalars().all()
 
 
-@router.get("/{run_id}/trace")
-async def get_run_trace(
-    run_id: str,
+@router.get("/{execution_id}/trace")
+async def get_execution_trace(
+    execution_id: str,
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ):
     """
-    Node-level execution trace for a run.
+    Node-level execution trace.
     Shows each AI node in execution order with tokens, cost, and model.
     """
-    run_uuid = to_uuid(run_id)
+    run_uuid = to_uuid(execution_id)
     run_result = await db.execute(select(Run).where(Run.id == run_uuid))
     run        = run_result.scalar_one_or_none()
     if not run:
-        raise HTTPException(404, "Run not found")
+        raise HTTPException(404, "Execution not found")
 
     token_result = await db.execute(
         select(TokenUsage)
@@ -185,15 +184,15 @@ async def get_run_trace(
     total_tokens = sum(n.total_tokens for n in nodes)
 
     return {
-        "run_id":         run_id,
-        "status":         run.status,
-        "platform":       run.platform,
-        "triggered_by":   run.triggered_by,
-        "duration_ms":    run.duration_ms,
-        "started_at":     run.started_at.isoformat() if run.started_at else None,
-        "finished_at":    run.finished_at.isoformat() if run.finished_at else None,
-        "total_tokens":   total_tokens,
-        "total_cost_usd": round(total_cost, 8),
+        "execution_id":    execution_id,
+        "status":          run.status,
+        "platform":        run.platform,
+        "triggered_by":    run.triggered_by,
+        "duration_ms":     run.duration_ms,
+        "started_at":      run.started_at.isoformat() if run.started_at else None,
+        "finished_at":     run.finished_at.isoformat() if run.finished_at else None,
+        "total_tokens":    total_tokens,
+        "total_cost_usd":  round(total_cost, 8),
         "node_trace": [
             {
                 "step":               i + 1,
@@ -204,12 +203,20 @@ async def get_run_trace(
                 "total_tokens":       n.total_tokens,
                 "cost_usd":           round(n.cost_usd, 8),
                 "cost_pct":           round(n.cost_usd / total_cost * 100, 1) if total_cost > 0 else 0,
-                "recorded_at":        n.recorded_at.isoformat() if n.recorded_at else None,
+                "recorded_at":         n.recorded_at.isoformat() if n.recorded_at else None,
+                # Phase 1 extended fields
+                "node_type":          n.node_type,
+                "event_type":         n.event_type,
+                "provider":           n.provider,
+                "error_message":      n.error_message,
+                "latency_ms":         n.latency_ms,
+                "node_metadata":      n.node_metadata,
             }
             for i, n in enumerate(nodes)
         ],
+        "events":          run.events_jsonb,
         "error_hint": (
-            "Run failed — check your n8n execution logs for the specific error. "
+            "Execution failed — check your n8n execution logs for the specific error. "
             "Common causes: API timeout, invalid input, rate limit exceeded."
             if run.status == "failed" else None
         ),

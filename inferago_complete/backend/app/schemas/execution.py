@@ -3,6 +3,7 @@ from typing import Optional
 from datetime import datetime
 import uuid
 
+
 class RunCreate(BaseModel):
     workflow_id: str
     n8n_execution_id: Optional[str] = None
@@ -11,6 +12,7 @@ class RunCreate(BaseModel):
     duration_ms: Optional[int] = None
     started_at: Optional[datetime] = None
     finished_at: Optional[datetime] = None
+
 
 class RunResponse(BaseModel):
     id: uuid.UUID
@@ -25,6 +27,7 @@ class RunResponse(BaseModel):
     created_at: datetime
     model_config = {"from_attributes": True}
 
+
 class TokenUsageCreate(BaseModel):
     node_name: str
     model: Optional[str] = None
@@ -32,6 +35,7 @@ class TokenUsageCreate(BaseModel):
     completion_tokens: int = 0
     total_tokens: int = 0
     cost_usd: float = 0.0
+
 
 class TokenUsageResponse(BaseModel):
     id: uuid.UUID
@@ -43,7 +47,15 @@ class TokenUsageResponse(BaseModel):
     total_tokens: int
     cost_usd: float
     recorded_at: datetime
+    # Phase 1 extended fields
+    node_type: Optional[str] = None
+    event_type: Optional[str] = None
+    provider: Optional[str] = None
+    error_message: Optional[str] = None
+    latency_ms: Optional[int] = None
+    node_metadata: Optional[dict] = None
     model_config = {"from_attributes": True}
+
 
 class TokenSummaryResponse(BaseModel):
     run_id: str

@@ -1,5 +1,5 @@
 from datetime import datetime
-from app.adapters.base_adapter import StandardExecution, NodeExecution
+from app.adapters.base_adapter import StandardExecution, NodeExecution, ExecutionEvent
 from app.services.token_parser import calculate_cost
 
 
@@ -45,4 +45,5 @@ class ZapierAdapter:
             finished_at=parse_dt(payload.get("finishedAt")),
             duration_ms=payload.get("duration_ms"),
             nodes=nodes,
+            events=[],
         )

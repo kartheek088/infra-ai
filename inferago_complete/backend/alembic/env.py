@@ -15,6 +15,9 @@ from app.models.run import Run, TokenUsage    # noqa
 from app.models.api_key import ApiKey         # noqa
 from app.models.rag import RAGMetrics         # noqa
 from app.models.alert import Alert            # noqa
+from app.models.security_finding import SecurityFinding  # noqa
+from app.models.policy import Policy          # noqa
+from app.models.audit_log import AuditLog     # noqa
 
 from dotenv import load_dotenv
 load_dotenv(Path(__file__).resolve().parent.parent / ".env")

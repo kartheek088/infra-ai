@@ -1,4 +1,4 @@
-import { useCostBreakdown } from "../hooks/useRuns";
+import { useCostBreakdown } from "../hooks/useExecutions";
 import { Loader2, TrendingUp } from "lucide-react";
 
 export default function CostBreakdownCard({ workflowId }: { workflowId: string }) {

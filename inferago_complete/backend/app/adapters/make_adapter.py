@@ -1,5 +1,5 @@
 from datetime import datetime
-from app.adapters.base_adapter import StandardExecution, NodeExecution
+from app.adapters.base_adapter import StandardExecution, NodeExecution, ExecutionEvent
 from app.services.token_parser import calculate_cost
 
 
@@ -47,4 +47,5 @@ class MakeAdapter:
             finished_at=parse_dt(payload.get("finishedAt") or payload.get("end")),
             duration_ms=payload.get("duration"),
             nodes=nodes,
+            events=[],
         )

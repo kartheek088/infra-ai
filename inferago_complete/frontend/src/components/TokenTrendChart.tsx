@@ -3,7 +3,7 @@ import {
   AreaChart, Area, XAxis, YAxis, CartesianGrid,
   Tooltip, ResponsiveContainer, Legend,
 } from "recharts";
-import { useTokenTrend } from "../hooks/useRuns";
+import { useTokenTrend } from "../hooks/useExecutions";
 import { Loader2 } from "lucide-react";
 
 const DAYS_OPTIONS = [

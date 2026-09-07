@@ -5,8 +5,12 @@ import Register from "./pages/Register";
 import Dashboard from "./pages/Dashboard";
 import WorkflowList from "./pages/WorkflowList";
 import WorkflowDetail from "./pages/WorkflowDetail";
-import RunDetail from "./pages/RunDetail";
+import ExecutionDetail from "./pages/ExecutionDetail";
 import ApiKeys from "./pages/ApiKeys";
+import SecurityFindings from "./pages/SecurityFindings";
+import Policies from "./pages/Policies";
+import AuditLog from "./pages/AuditLog";
+import SettingsPage from "./pages/Settings";
 import Layout from "./components/Layout";
 
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
@@ -31,12 +35,16 @@ export default function App() {
             </ProtectedRoute>
           }
         >
-          <Route index                          element={<Navigate to="/dashboard" replace />} />
-          <Route path="dashboard"               element={<Dashboard />} />
-          <Route path="workflows"               element={<WorkflowList />} />
-          <Route path="workflows/:workflowId"   element={<WorkflowDetail />} />
-          <Route path="runs/:runId"             element={<RunDetail />} />
-          <Route path="api-keys"                element={<ApiKeys />} />
+          <Route index                           element={<Navigate to="/dashboard" replace />} />
+          <Route path="dashboard"                element={<Dashboard />} />
+          <Route path="workflows"                element={<WorkflowList />} />
+          <Route path="workflows/:workflowId"    element={<WorkflowDetail />} />
+          <Route path="executions/:executionId"  element={<ExecutionDetail />} />
+          <Route path="security-findings"         element={<SecurityFindings />} />
+          <Route path="policies"                  element={<Policies />} />
+          <Route path="audit-log"                element={<AuditLog />} />
+          <Route path="settings"                 element={<SettingsPage />} />
+          <Route path="api-keys"                 element={<ApiKeys />} />
         </Route>
       </Routes>
     </BrowserRouter>
