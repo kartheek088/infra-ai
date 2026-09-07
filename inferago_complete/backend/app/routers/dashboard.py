@@ -15,7 +15,7 @@ from app.services.rag_analyzer import get_rag_summary
 from app.services.suggestions import generate_suggestions
 from app.services.health_score import calculate_health_score
 
-logger = logging.getLogger("inferago")
+logger = logging.getLogger("ari")
 router = APIRouter(prefix="/api/dashboard", tags=["Dashboard"])
 
 

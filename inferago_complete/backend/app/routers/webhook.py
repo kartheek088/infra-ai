@@ -262,7 +262,7 @@ async def process_execution(
     if not workflow:
         return {
             "status":   "skipped",
-            "reason":   "Workflow not registered in Inferago",
+            "reason":   "Workflow not registered in ARI",
             "hint":     f"Register workflow ID '{execution.workflow_id}' in your dashboard",
             "platform": execution.platform,
         }
@@ -381,7 +381,7 @@ def make_endpoint(platform: str):
         payload: dict,
         background_tasks: BackgroundTasks,
         db: AsyncSession = Depends(get_db),
-        api_key: str = Header(..., description="Your Inferago API key (X-API-Key header)"),
+        api_key: str = Header(..., description="Your ARI API key (X-API-Key header)"),
     ):
         user_id = await validate_api_key(api_key, db)
         if not user_id:

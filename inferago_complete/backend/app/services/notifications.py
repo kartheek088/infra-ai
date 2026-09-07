@@ -6,12 +6,12 @@ async def send_slack_alert(webhook_url: str, workflow_name: str, message: str, p
     """Send a Slack notification when an alert fires."""
     payload = {
         "blocks": [
-            {"type": "header", "text": {"type": "plain_text", "text": f"Inferago Alert — {workflow_name}"}},
+            {"type": "header", "text": {"type": "plain_text", "text": f"ARI Alert — {workflow_name}"}},
             {"type": "section", "fields": [
                 {"type": "mrkdwn", "text": f"*Platform:*\n{platform}"},
                 {"type": "mrkdwn", "text": f"*Alert:*\n{message}"},
             ]},
-            {"type": "context", "elements": [{"type": "mrkdwn", "text": "Inferago — AI Workflow Monitor"}]},
+            {"type": "context", "elements": [{"type": "mrkdwn", "text": "ARI — AI Runtime Intelligence"}]},
         ]
     }
     try:

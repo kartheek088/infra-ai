@@ -3,7 +3,7 @@ import traceback
 from fastapi import Request
 from fastapi.responses import JSONResponse
 
-logger = logging.getLogger("inferago")
+logger = logging.getLogger("ari")
 
 
 async def global_exception_handler(request: Request, exc: Exception):
