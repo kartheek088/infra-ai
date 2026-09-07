@@ -6,11 +6,9 @@ import Dashboard from "./pages/Dashboard";
 import WorkflowList from "./pages/WorkflowList";
 import WorkflowDetail from "./pages/WorkflowDetail";
 import ExecutionDetail from "./pages/ExecutionDetail";
-import ApiKeys from "./pages/ApiKeys";
 import SecurityFindings from "./pages/SecurityFindings";
 import Policies from "./pages/Policies";
 import AuditLog from "./pages/AuditLog";
-import SettingsPage from "./pages/Settings";
 import TestPlayground from "./pages/TestPlayground";
 import ReviewQueue from "./pages/ReviewQueue";
 import Layout from "./components/Layout";
@@ -46,8 +44,6 @@ export default function App() {
           <Route path="policies"                  element={<Policies />} />
           <Route path="audit-log"                element={<AuditLog />} />
           <Route path="review-queue"             element={<ReviewQueue />} />
-          <Route path="settings"                 element={<SettingsPage />} />
-          <Route path="api-keys"                 element={<ApiKeys />} />
           <Route path="test-playground"          element={<TestPlayground />} />
         </Route>
       </Routes>
