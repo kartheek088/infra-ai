@@ -4,9 +4,10 @@ export interface Workflow {
   id: string;
   name: string;
   description: string | null;
-  n8n_workflow_id: string;
+  n8n_workflow_id?: string | null;
+  platform?: string | null;
   created_at: string;
-  updated_at: string | null;
+  updated_at?: string | null;
 }
 
 export interface CreateWorkflowPayload { name: string; description?: string; n8n_workflow_id: string; }

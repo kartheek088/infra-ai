@@ -217,3 +217,66 @@ export async function getExecutionAnomalies(executionId: string): Promise<Anomal
 export async function getAiExplanation(executionId: string): Promise<AiExplanation> {
   return api.get<AiExplanation>(`/api/executions/${executionId}/ai-explanation`).then(res => res.data);
 }
+
+// ── Observability & Trace Intelligence APIs ─────────────────────────────────
+
+export interface GlobalMetrics {
+  automations: number;
+  executions: number;
+  failures: number;
+  avg_latency: number;
+}
+
+export interface ExecutionSummaryData {
+  execution_id: string;
+  run_id?: string;
+  automation_name?: string;
+  workflow_id?: string;
+  platform?: string;
+  health: "SUCCESS" | "DELAYED" | "FAILED" | "REQUIRE_REVIEW" | "BLOCKED" | string;
+  status: string;
+  total_duration: number;
+  total_tokens: number;
+  total_cost: number;
+  timeline?: {
+    execution_id?: string;
+    total_duration?: number;
+    steps: TimelineStep[];
+  };
+  anomalies: string[];
+  anomalies_full?: ExecutionAnomaly[];
+  explanation?: string | null;
+  security_findings?: Array<{
+    id: string;
+    detector_id: string;
+    detector_name?: string;
+    severity: string;
+    confidence?: number;
+    title?: string;
+    description?: string;
+    risk_score?: number;
+    node_name?: string;
+    governance_action?: string;
+    reviewed?: boolean;
+  }>;
+  governance_decision?: string;
+  max_risk_score?: number;
+  created_at?: string | null;
+}
+
+export async function getGlobalMetrics(): Promise<GlobalMetrics> {
+  return api.get<GlobalMetrics>("/api/metrics").then(res => res.data);
+}
+
+export async function getRecentExecutions(limit = 20): Promise<ExecutionSummaryData[]> {
+  return api.get<ExecutionSummaryData[]>(`/api/executions/recent?limit=${limit}`).then(res => res.data);
+}
+
+export async function getExecutionSummary(executionId: string): Promise<ExecutionSummaryData> {
+  return api.get<ExecutionSummaryData>(`/api/executions/${executionId}/summary`).then(res => res.data);
+}
+
+export async function analyzeExecution(payload: Record<string, unknown>): Promise<ExecutionSummaryData> {
+  return api.post<ExecutionSummaryData>("/api/executions/analyze", payload).then(res => res.data);
+}
+

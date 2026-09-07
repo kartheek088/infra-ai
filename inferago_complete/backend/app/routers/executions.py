@@ -28,19 +28,214 @@ async def create_execution(
     return run
 
 
-@router.get("/{workflow_id}", response_model=list[RunResponse])
-async def get_executions(
-    workflow_id: str,
-    current_user: User = Depends(get_current_user),
+@router.get("/recent")
+async def get_recent_executions(
+    limit: int = Query(default=20, ge=1, le=100),
     db: AsyncSession = Depends(get_db),
-    # Filtering params
-    status: Optional[str]  = Query(default=None, description="Filter by: success, failed, running"),
-    platform: Optional[str] = Query(default=None, description="Filter by: n8n, make, zapier, custom"),
-    date_from: Optional[str] = Query(default=None, description="ISO date e.g. 2026-03-01"),
-    date_to: Optional[str]   = Query(default=None, description="ISO date e.g. 2026-03-31"),
-    min_cost: Optional[float] = Query(default=None, description="Minimum cost in USD"),
-    limit: int = Query(default=50, ge=1, le=200),
 ):
+    """
+    Get real-time execution flow (recent executions across all workflows).
+    Formatted with timeline steps, health status, duration, tokens, cost, anomalies, and AI explanation.
+    """
+    stmt = select(Run).order_by(Run.created_at.desc()).limit(limit)
+    result = await db.execute(stmt)
+    runs = result.scalars().all()
+
+    output = []
+    for r in runs:
+        wf_res = await db.execute(select(Workflow).where(Workflow.id == r.workflow_id))
+        wf = wf_res.scalar_one_or_none()
+        wf_name = wf.name if wf else "Workflow Execution"
+
+        timeline = await build_timeline(run_id=str(r.id), tenant_id=str(r.tenant_id), db=db)
+        anomalies_data = await detect_anomalies(run_id=str(r.id), tenant_id=str(r.tenant_id), db=db)
+
+        health = "SUCCESS"
+        if r.status in ("failed", "error"):
+            health = "FAILED"
+        elif r.duration_ms and r.duration_ms > 3000:
+            health = "DELAYED"
+        if r.governance_decision in ("BLOCK", "BLOCKED"):
+            health = "BLOCKED"
+        elif r.governance_decision in ("REQUIRE_REVIEW", "REQUIRES_REVIEW"):
+            health = "REQUIRE_REVIEW"
+
+        output.append({
+            "execution_id": r.n8n_execution_id or str(r.id),
+            "run_id": str(r.id),
+            "automation_name": wf_name,
+            "workflow_id": str(r.workflow_id),
+            "platform": r.platform,
+            "health": health,
+            "status": r.status,
+            "total_duration": (r.duration_ms / 1000.0) if r.duration_ms else (timeline.get("duration_ms", 0) / 1000.0 if timeline.get("duration_ms") else 0.0),
+            "total_tokens": timeline.get("total_tokens", 0),
+            "total_cost": timeline.get("total_cost", 0.0),
+            "timeline": timeline,
+            "anomalies": [a.get("detail", a.get("kind", "")) for a in anomalies_data],
+            "anomalies_full": anomalies_data,
+            "explanation": r.ai_explanation,
+            "created_at": r.created_at.isoformat() if r.created_at else None,
+        })
+    return output
+
+
+@router.post("/analyze")
+async def analyze_execution_payload(
+    payload: dict,
+    db: AsyncSession = Depends(get_db),
+):
+    """
+    Instant execution analyzer — analyze any raw execution payload on the fly.
+    Computes steps, latency, tokens, cost, anomalies, and returns instant trace.
+    """
+    from app.adapters.custom_adapter import CustomAdapter
+    from app.services.openrouter_client import explain_execution
+
+    adapter = CustomAdapter()
+    std_exec = adapter.to_standard(payload)
+
+    total_tokens = sum(n.total_tokens for n in std_exec.nodes)
+    total_cost = sum(n.cost_usd for n in std_exec.nodes)
+    total_duration_s = (std_exec.duration_ms / 1000.0) if std_exec.duration_ms else sum((n.latency_ms or 0) / 1000.0 for n in std_exec.nodes)
+
+    steps = []
+    anomalies = []
+    for i, n in enumerate(std_exec.nodes):
+        dur_s = (n.latency_ms / 1000.0) if n.latency_ms else 0.0
+        steps.append({
+            "step": n.node_name or f"Step {i+1}",
+            "kind": "node",
+            "status": "failed" if n.error_message else "SUCCESS",
+            "duration": dur_s,
+            "duration_ms": n.latency_ms,
+            "tokens": n.total_tokens,
+            "cost": n.cost_usd,
+            "model": n.model,
+            "provider": n.provider,
+            "node_type": n.node_type,
+            "error_message": n.error_message,
+        })
+        if dur_s > 3.0:
+            anomalies.append(f"{n.node_name} latency spike ({dur_s:.2f}s)")
+        if n.total_tokens > 500:
+            anomalies.append(f"{n.node_name} token spike ({n.total_tokens:,} tokens)")
+        if n.error_message:
+            anomalies.append(f"{n.node_name} failed: {n.error_message}")
+
+    health = "SUCCESS"
+    if any(n.error_message for n in std_exec.nodes) or std_exec.status in ("failed", "error"):
+        health = "FAILED"
+    elif total_duration_s > 3.0:
+        health = "DELAYED"
+
+    timeline = {
+        "execution_id": std_exec.execution_id or "live_test",
+        "total_duration": total_duration_s,
+        "steps": steps,
+    }
+
+    explanation, _ = await explain_execution(
+        run_status=std_exec.status,
+        platform=std_exec.platform,
+        duration_ms=std_exec.duration_ms,
+        total_cost=total_cost,
+        total_tokens=total_tokens,
+        node_count=len(std_exec.nodes),
+        failed_node_count=sum(1 for n in std_exec.nodes if n.error_message),
+        anomalies=[{"kind": "anomaly", "step": a, "detail": a, "severity": "medium"} for a in anomalies],
+        findings=[],
+        top_nodes=[{"node_name": n.node_name, "model": n.model, "cost_usd": n.cost_usd, "total_tokens": n.total_tokens, "latency_ms": n.latency_ms} for n in std_exec.nodes],
+    )
+
+    return {
+        "execution_id": std_exec.execution_id or "live_test",
+        "automation_name": std_exec.workflow_id or "Live Analyzed Execution",
+        "health": health,
+        "total_duration": total_duration_s,
+        "total_tokens": total_tokens,
+        "total_cost": total_cost,
+        "timeline": timeline,
+        "anomalies": anomalies,
+        "explanation": explanation or "Execution analyzed successfully.",
+    }
+
+
+@router.get("/summary/{execution_id}")
+@router.get("/{execution_id}/summary")
+async def get_execution_summary(
+    execution_id: str,
+    db: AsyncSession = Depends(get_db),
+):
+    """
+    Get full execution summary (trace, steps, anomalies, security findings, AI intelligence).
+    """
+    run_uuid = to_uuid(execution_id)
+    run_res = await db.execute(
+        select(Run).where((Run.id == run_uuid) | (Run.n8n_execution_id == execution_id))
+    )
+    run = run_res.scalar_one_or_none()
+    if not run:
+        raise HTTPException(404, "Execution not found")
+
+    wf_res = await db.execute(select(Workflow).where(Workflow.id == run.workflow_id))
+    wf = wf_res.scalar_one_or_none()
+    wf_name = wf.name if wf else "Workflow Execution"
+
+    timeline = await build_timeline(run_id=str(run.id), tenant_id=str(run.tenant_id), db=db)
+    anomalies_data = await detect_anomalies(run_id=str(run.id), tenant_id=str(run.tenant_id), db=db)
+
+    from app.models.security_finding import SecurityFinding
+    sf_res = await db.execute(
+        select(SecurityFinding).where(SecurityFinding.run_id == run.id)
+    )
+    findings = sf_res.scalars().all()
+
+    health = "SUCCESS"
+    if run.status in ("failed", "error"):
+        health = "FAILED"
+    elif run.duration_ms and run.duration_ms > 3000:
+        health = "DELAYED"
+    if run.governance_decision in ("BLOCK", "BLOCKED"):
+        health = "BLOCKED"
+    elif run.governance_decision in ("REQUIRE_REVIEW", "REQUIRES_REVIEW"):
+        health = "REQUIRE_REVIEW"
+
+    return {
+        "execution_id": run.n8n_execution_id or str(run.id),
+        "run_id": str(run.id),
+        "automation_name": wf_name,
+        "workflow_id": str(run.workflow_id),
+        "platform": run.platform,
+        "health": health,
+        "status": run.status,
+        "total_duration": (run.duration_ms / 1000.0) if run.duration_ms else (timeline.get("duration_ms", 0) / 1000.0 if timeline.get("duration_ms") else 0.0),
+        "total_tokens": timeline.get("total_tokens", 0),
+        "total_cost": timeline.get("total_cost", 0.0),
+        "timeline": timeline,
+        "anomalies": [a.get("detail", a.get("kind", "")) for a in anomalies_data],
+        "anomalies_full": anomalies_data,
+        "explanation": run.ai_explanation,
+        "security_findings": [
+            {
+                "id": str(f.id),
+                "detector_id": f.detector_id,
+                "detector_name": f.detector_name,
+                "severity": f.severity,
+                "confidence": f.confidence,
+                "title": f.title,
+                "description": f.description,
+                "risk_score": f.risk_score,
+                "node_name": f.node_name,
+                "governance_action": f.governance_action,
+                "reviewed": f.reviewed,
+            }
+            for f in findings
+        ],
+        "governance_decision": run.governance_decision,
+        "max_risk_score": run.max_risk_score,
+        "created_at": run.created_at.isoformat() if run.created_at else None,
+    }
     """
     Get execution history with filtering support.
     Filter by status, platform, date range, and minimum cost.

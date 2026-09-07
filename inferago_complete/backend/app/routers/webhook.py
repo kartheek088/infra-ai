@@ -384,22 +384,22 @@ async def process_execution(
     workflow = result.scalar_one_or_none()
 
     if not workflow:
-        # Try matching by n8n_workflow_id (external adapter ID)
-        result = await db.execute(
-            select(Workflow).where(
-                Workflow.n8n_workflow_id == execution.workflow_id,
-                Workflow.user_id == uid_uuid,
-            )
+        # Auto-create Workflow on the fly so ingestion is seamless and never skips
+        workflow_name = (
+            execution.workflow_id
+            if execution.workflow_id
+            else f"{execution.platform.capitalize()} Workflow"
         )
-        workflow = result.scalar_one_or_none()
-
-    if not workflow:
-        return {
-            "status":   "skipped",
-            "reason":   "Workflow not registered in ARI",
-            "hint":     f"Register workflow ID '{execution.workflow_id}' in your dashboard",
-            "platform": execution.platform,
-        }
+        workflow = Workflow(
+            id=wf_uuid if wf_uuid else uuid.uuid4(),
+            user_id=uid_uuid,
+            name=str(workflow_name),
+            platform=execution.platform,
+            n8n_workflow_id=str(execution.workflow_id) if execution.workflow_id else None,
+            is_active=True,
+        )
+        db.add(workflow)
+        await db.flush()
 
     # ── Create run record ─────────────────────────────────────────────
     # Serialize execution lifecycle events to JSONB

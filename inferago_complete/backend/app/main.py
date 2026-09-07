@@ -104,3 +104,27 @@ def health_check():
             "ai_summaries", "execution_tracking",
         ],
     }
+
+
+@app.get("/api/metrics", tags=["System"])
+@app.get("/metrics", tags=["System"])
+async def get_metrics():
+    from app.db.session import AsyncSessionLocal
+    from sqlalchemy import select, func
+    from app.models.workflow import Workflow
+    from app.models.run import Run
+
+    async with AsyncSessionLocal() as db:
+        wf_count = (await db.execute(select(func.count(Workflow.id)))).scalar() or 0
+        run_count = (await db.execute(select(func.count(Run.id)))).scalar() or 0
+        failure_count = (await db.execute(select(func.count(Run.id)).where(Run.status.in_(["failed", "error"])))).scalar() or 0
+        
+        avg_dur_ms = (await db.execute(select(func.avg(Run.duration_ms)).where(Run.duration_ms.isnot(None)))).scalar() or 0.0
+        avg_latency_s = round((avg_dur_ms or 0.0) / 1000.0, 2)
+
+        return {
+            "automations": wf_count,
+            "executions": run_count,
+            "failures": failure_count,
+            "avg_latency": avg_latency_s,
+        }
